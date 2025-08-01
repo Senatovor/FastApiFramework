@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  pgsql:
+    container_name: 'pgsql_web'
+    image: postgres:13.3
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    env_file:
+      .env
+    volumes:
+      - pgsql_data:/var/lib/pgsql
+
+  app:
+    container_name: 'app_web'
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./:/project
+    command: python src/main.py
+
+  redis:
+    container_name: 'redis_web'
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    restart: always
+    volumes:
+      - redis_data:/data
+    command: redis-server --requirepass 1111
+
+
+volumes:
+  pgsql_data:
+  redis_data:
