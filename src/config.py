@@ -2,62 +2,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import EmailStr, HttpUrl
 from pathlib import Path
 from loguru import logger
+from fastapi.templating import Jinja2Templates
 
 from .redis_database.config import RedisConfig
-
-
-class DatabaseConfig(BaseSettings):
-    """Класс конфигурации базы данных.
-
-    Загружает настройки из .env файла или переменных окружения.
-
-    Attributes:
-        DB_HOST: Хост базы данных
-        DB_PORT: Порт базы данных
-        POSTGRES_DB: Имя базы данных
-        POSTGRES_USER: Пользователь БД
-        POSTGRES_PASSWORD: Пароль пользователя БД
-    """
-    # Настройки базы данных
-    DB_HOST: str
-    DB_PORT: str
-    POSTGRES_DB: str
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-
-    model_config = SettingsConfigDict(
-        env_file=Path(__file__).parent.parent / ".env",
-        env_file_encoding='utf-8',
-        extra="ignore"
-    )
-
-    @property
-    def database_url(self) -> str:
-        """Генерирует URL для подключения к PostgreSQL с использованием asyncpg."""
-        return (f'postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@'
-                f'{self.DB_HOST}:{self.DB_PORT}/{self.POSTGRES_DB}')
-
-
-class AuthConfig(BaseSettings):
-    """Класс конфигурации авторизации.
-
-    Загружает настройки из .env файла или переменных окружения.
-
-    Attributes:
-        SECRET_KEY: Секретный ключ для JWT
-        ALGORITHM: Алгоритм шифрования JWT
-        ACCESS_TOKEN_EXPIRE: Время жизни access токена (в минутах)
-    """
-    # Настройки аутентификации
-    SECRET_KEY: str
-    ALGORITHM: str
-    ACCESS_TOKEN_EXPIRE: int
-
-    model_config = SettingsConfigDict(
-        env_file=Path(__file__).parent.parent / ".env",
-        env_file_encoding='utf-8',
-        extra="ignore"
-    )
+from .auth.config import AuthConfig
+from .database.config import DatabaseConfig
 
 
 class LoggerConfig(BaseSettings):
@@ -146,5 +95,6 @@ class Config(BaseSettings):
 
 try:
     config = Config()
+    templates = Jinja2Templates(directory=Path(__file__).parent.parent / 'templates')
 except Exception as e:
     logger.error(f'Во время парсинга .env произошла ошибка: {e}')

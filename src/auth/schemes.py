@@ -34,6 +34,5 @@ class UserData(EmailUser, UsernameUser):
     is_verified: bool
     created_at: datetime.datetime
     updated_at: datetime.datetime
-    session_id: str | None = None
 
     model_config = ConfigDict(from_attributes=True)

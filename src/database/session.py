@@ -55,13 +55,11 @@ class DatabaseSessionManager:
             expire_on_commit=False,
             autoflush=False
         )
-        logger.success("Движок базы данных инициализировано")
 
     async def close(self):
         """Закрывает соединения с базой данных."""
         if self.engine:
             await self.engine.dispose()
-            logger.info("Database engine closed")
 
     @asynccontextmanager
     async def session(
@@ -140,7 +138,7 @@ class DatabaseSessionManager:
         """
         async def get_session(request: Request) -> AsyncIterator[AsyncSession]:
             if not hasattr(request.app.state, 'db_manager'):
-                raise RuntimeError("Database manager not initialized in app.state")
+                raise RuntimeError("Менеджер бд должен быть инициализирован в app.state")
 
             db_manager: DatabaseSessionManager = request.app.state.db_manager
 

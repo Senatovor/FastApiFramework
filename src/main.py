@@ -1,24 +1,42 @@
 import uvicorn
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
+from pathlib import Path
 from contextlib import asynccontextmanager
 
 from src.redis_database.client import redis_manager
 from src.database.session import session_manager
 from src.log import setup_logger
 from src.config import config
-from src.auth.router import auth_router
+from src.auth.router import auth_router, auth_templates_routes
+from src.auth.middleware import TokenValidationMiddleware
 from src.users.router import users_router
-
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Инициализация
+    """Контекстный менеджер для управления жизненным циклом приложения.
+
+    Алгоритм работы:
+    1. Добавляем статические файлы
+    2. Инициализация Redis менеджера и сохранение в app.state
+    3. Инициализация менеджера сессий БД и сохранение в app.state
+    4. Возврат управления приложению (yield)
+    5. По завершении работы:
+       - Закрытие соединений Redis
+       - Закрытие соединений с БД
+
+    Args:
+        app: Экземпляр FastAPI приложения
+    """
+
+    # Инициализация пулов redis
     await redis_manager.init()
     app.state.redis_manager = redis_manager
 
+    # Инициализация сессий sql базы
     await session_manager.init()
     app.state.db_manager = session_manager
 
@@ -30,7 +48,15 @@ async def lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
-    """Фабрика для создания и настройки экземпляра FastAPI приложения.
+    """Фабрика для создания и настройки экземпляра FastAPI.
+
+    Алгоритм работы:
+    1. Создает экземпляр FastAPI с базовыми настройками
+    2. Добавляет CORS middleware
+    3. Добавляет middleware для валидации токенов
+    4. Подключает роутеры:
+       - auth_router (аутентификация)
+       - users_router (работа с пользователями)
 
     Returns:
         FastAPI: Настроенный экземпляр FastAPI приложения
@@ -52,18 +78,30 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"]
     )
-    app.include_router(auth_router)     # Установка роутера авторизации
+    app.mount('/static', StaticFiles(directory=Path(__file__).parent.parent / 'static'), name='static')
+    app.add_middleware(TokenValidationMiddleware)
+    app.include_router(auth_router)  # Установка роутера авторизации
+    app.include_router(auth_templates_routes)
     app.include_router(users_router)
     return app
 
-app = create_app()
 
 if __name__ == '__main__':
+    """Точка входа для запуска приложения.
+
+    Алгоритм работы:
+    1. Настройка логгера
+    2. Создание приложения
+    3. Запуск сервера uvicorn с параметрами:
+       - Хост: 0.0.0.0 (доступ с любых интерфейсов)
+       - Порт: 5000
+    4. Обработка возможных ошибок запуска
+    """
     try:
         setup_logger()
-        # app = create_app()
+        app = create_app()
         uvicorn.run(
-            'main:app',     # todo в продакшене сделать app
+            app,
             host="0.0.0.0",
             port=5000,
             log_config=None,

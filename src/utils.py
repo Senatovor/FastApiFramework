@@ -1,7 +1,6 @@
-from fastapi import status
-from typing import Type
+from fastapi import status, HTTPException
 
-from src.schemes import DetailResponse
+from .schemes import DetailResponse
 
 
 def ok_response_docs(
@@ -31,27 +30,28 @@ def ok_response_docs(
 
 
 def error_response_docs(
-        status_code: int,
-        error: Type[Exception],
+        error: HTTPException,
+        description: str | None = None,
 ) -> dict:
     """Генерирует документацию для ошибок в формате OpenAPI.
 
     Args:
-        status_code: HTTP статус код
-        error: Класс исключения
+        error: Исключение HTTPException
+        description: Описание ошибки для документации
 
     Returns:
         Словарь с описанием ошибки в формате OpenAPI
     """
-    error_instance = error()
-
     return {
-        status_code: {
+        error.status_code: {
             "model": DetailResponse,
-            "description": str(error_instance),
+            "description": description or error.detail,
             "content": {
                 "application/json": {
-                    "example": {"detail": str(error_instance)}
+                    "example": {
+                        "detail": error.detail,
+                        **({"headers": error.headers} if error.headers else {})
+                    }
                 }
             }
         }

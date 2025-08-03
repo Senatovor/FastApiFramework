@@ -94,20 +94,25 @@ class AuthHandler:
     @staticmethod
     async def create_token(
             data: dict,
-            timedelta_minutes: int = config.auth_config.ACCESS_TOKEN_EXPIRE,
+            timedelta_minutes: int,
+            token_type: str
     ) -> str:
         """Создает JWT токен с указанными параметрами.
 
         Args:
             data: Основные данные токена (будет добавлены exp и session_id)
             timedelta_minutes: Время жизни токена в минутах (по умолчанию из config)
+            token_type: Тип токена
 
         Returns:
             str: Получившийся токен
         """
         expire = datetime.now(timezone.utc) + timedelta(minutes=timedelta_minutes)
         encode = data.copy()
-        encode.update({"exp": expire})
+        encode.update({
+            "exp": expire,
+            "type": token_type,
+        })
         token = jwt.encode(
             encode,
             key=config.auth_config.SECRET_KEY,
