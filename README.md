@@ -59,6 +59,12 @@ src/
 
 1. Настройте переменные окружения в .env файле
 2. Запустите докер: **docker-compose up -d**
+3. Команды: 
+   - docker-compose exec app bash
+   - alembic revision --autogenerate -m "create  user"
+   - alembic upgrade head
+   - exit
+4. Переходим: http://localhost:5000
 
 
 ## 🧠 Принципы работы авторизации
