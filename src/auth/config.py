@@ -11,7 +11,6 @@ class AuthConfig(BaseSettings):
         SECRET_KEY: Секретный ключ для JWT
         ALGORITHM: Алгоритм шифрования JWT
         ACCESS_TOKEN_EXPIRE: Время жизни access токена (в минутах)
-        PUBLIC_ROUTES: Роуты по которым не проверяется авторизация
         LOGIN_ROUTE: Путь входа
         REFRESH_ROUTE: Путь обновления токена
     """
@@ -21,14 +20,6 @@ class AuthConfig(BaseSettings):
     ACCESS_TOKEN_EXPIRE: int
     REFRESH_TOKEN_EXPIRE: int
 
-    PUBLIC_ROUTES: list = [
-        "/login",
-        "/auth/login",
-        "/register",
-        "/auth/register",
-        "/auth/refresh",
-        '/openapi.json',
-    ]
     LOGIN_ROUTE: str = "/login"
     REFRESH_ROUTE: str = "/auth/refresh"
     HOME_ROUTE: str = "/"

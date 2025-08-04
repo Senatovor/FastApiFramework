@@ -1,4 +1,5 @@
 from fastapi import Depends
+from jose import ExpiredSignatureError
 from passlib.exc import InvalidTokenError
 from redis.asyncio import Redis
 from sqlalchemy.exc import IntegrityError
@@ -191,7 +192,8 @@ class UserService:
             )
 
             return new_access_token, new_refresh_token
-
+        except ExpiredSignatureError:
+            raise HttpTokenIsInvalidException
         except InvalidTokenError:
             raise HttpTokenIsInvalidException
 

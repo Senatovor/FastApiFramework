@@ -1,9 +1,15 @@
 from fastapi import status, HTTPException
 
+
+HttpExpiredSignatureException = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail='Срок действия токена истек',
+)
+
+
 HttpNotAuthException = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
     detail='Вы не вошли в систему',
-    headers={'WWW-Authenticate': 'Bearer'},
 )
 
 HttpAlreadyExistException = HTTPException(
@@ -18,20 +24,15 @@ HttpInvalidTokenTypeException = HTTPException(
 
 HttpTokenIsInvalidException = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Токен недействителен"
+    detail="Токен недействителен",
 )
 
 HttpUserNotFoundException = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Пользователь не найден"
-)
-
-HttpExpiredSignatureException = HTTPException(
-    status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Срок действия токена истек"
+    detail="Пользователь не найден",
 )
 
 HttpTokenMissingException = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Токен отсутствует"
+    detail="Токен отсутствует",
 )

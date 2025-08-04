@@ -34,5 +34,6 @@ class UserData(EmailUser, UsernameUser):
     is_verified: bool
     created_at: datetime.datetime
     updated_at: datetime.datetime
+    is_authenticated: bool = True
 
     model_config = ConfigDict(from_attributes=True)

@@ -1,18 +1,23 @@
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from pathlib import Path
 from contextlib import asynccontextmanager
+from sqladmin import Admin
 
 from src.redis_database.client import redis_manager
 from src.database.session import session_manager
 from src.log import setup_logger
 from src.config import config
-from src.auth.router import auth_router, auth_templates_routes
-from src.auth.middleware import TokenValidationMiddleware
-from src.users.router import users_router
+from src.auth.router import auth_router
+from src.auth.template_router import auth_templates_routes
+from src.admin.middleware import AdminPermissionMiddleware
+from src.admin.models import UserAdmin
+from src.admin.router import admin_router
+from src.auth.http_handler import unauthorised_exception_handler
+from src.admin.templates_router import admin_template_router
 
 
 @asynccontextmanager
@@ -39,6 +44,10 @@ async def lifespan(app: FastAPI):
     # Инициализация сессий sql базы
     await session_manager.init()
     app.state.db_manager = session_manager
+
+    # Инициализация админки
+    admin = Admin(app, session_manager.engine)
+    admin.add_view(UserAdmin)
 
     yield
 
@@ -78,11 +87,13 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"]
     )
+    app.add_middleware(AdminPermissionMiddleware)
     app.mount('/static', StaticFiles(directory=Path(__file__).parent.parent / 'static'), name='static')
-    app.add_middleware(TokenValidationMiddleware)
+    app.add_exception_handler(HTTPException, unauthorised_exception_handler)
     app.include_router(auth_router)  # Установка роутера авторизации
     app.include_router(auth_templates_routes)
-    app.include_router(users_router)
+    app.include_router(admin_router)
+    app.include_router(admin_template_router)
     return app
 
 
@@ -107,5 +118,6 @@ if __name__ == '__main__':
             log_config=None,
             log_level=None,
         )
+
     except Exception as e:
         logger.error(f'Во время создания приложения произошла ошибка: {e}')

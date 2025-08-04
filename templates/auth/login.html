@@ -1,75 +1,36 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход в систему</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/login.css">
-</head>
-<body>
-    <div class="container">
-        <div class="auth-container">
-            <div class="auth-header">
-                <h2>Вход в систему</h2>
+<!-- login.html -->
+{% extends "auth/layouts.html" %}
+
+{% block title %}Вход в систему{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-body p-5">
+        <h2 class="card-title text-center mb-4">Вход в систему</h2>
+
+        <form id="loginForm" novalidate>
+            <div class="mb-3">
+                <label for="username" class="form-label">Имя пользователя</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+                <div class="invalid-feedback" id="usernameError"></div>
             </div>
-            <form id="loginForm">
-                <div class="mb-3">
-                    <label for="username" class="form-label">Имя пользователя</label>
-                    <input type="text" class="form-control" id="username" name="username" required>
-                    <div id="usernameError" class="error-message"></div>
-                </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">Пароль</label>
-                    <input type="password" class="form-control" id="password" name="password" required>
-                    <div id="passwordError" class="error-message"></div>
-                </div>
-                <button type="submit" class="btn btn-primary">Войти</button>
-            </form>
-            <div class="auth-footer">
-                <p>Нет аккаунта? <a href="/register">Зарегистрируйтесь</a></p>
+
+            <div class="mb-4">
+                <label for="password" class="form-label">Пароль</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+                <div class="invalid-feedback" id="passwordError"></div>
             </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-2">Войти</button>
+        </form>
+
+        <div class="text-center mt-4">
+            <p class="text-muted">Нет аккаунта? <a href="/register" class="text-decoration-none">Зарегистрируйтесь</a></p>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            // Очистка предыдущих ошибок
-            document.getElementById('usernameError').textContent = '';
-            document.getElementById('passwordError').textContent = '';
-
-            const formData = {
-                username: document.getElementById('username').value,
-                password: document.getElementById('password').value
-            };
-
-            try {
-                const response = await fetch('/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData),
-                    credentials: 'include'
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                     alert('Произошла ошибка: ' + (errorData.detail || 'Неизвестная ошибка'));
-                    return;
-                }
-
-                const result = await response.json();
-                window.location.href = '/users/info';
-
-            } catch (error) {
-                console.error('Ошибка:', error);
-                alert('Произошла ошибка при отправке запроса');
-            }
-        });
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% block js %}
+<script src="/static/js/login.js"></script>
+{% endblock %}

@@ -1,13 +1,13 @@
-from fastapi import APIRouter, Depends, status, Request, HTTPException, Response
+from fastapi import APIRouter, Depends, status, Request, HTTPException
 from fastapi.responses import JSONResponse, RedirectResponse, HTMLResponse
 from typing import Annotated
 
-from ..config import templates
+from ..config import templates, config
 from ..exceptions import HttpServerException
 from ..database.session import DbSessionDepends
 from ..redis_database.client import RedisDepends
 from ..utils import error_response_docs, ok_response_docs
-from .dependencies import get_current_user
+from .dependencies import get_current_user, have_tokens_in_cookies
 from .services import UserService
 from .schemes import RegistrateUser, UserData, LoginUser
 from .exceptions import (
@@ -242,37 +242,8 @@ async def logout(
         HTTPException: 500 при внутренней ошибке сервера
     """
     await service.logout_user(user, redis_client)
-    response = JSONResponse(content={"message": "Вы успешно вышли из системы"})
+    response = JSONResponse(content={'message': 'Вы вышли'})
     response.delete_cookie(key="access_token")
     response.delete_cookie(key="refresh_token")
 
     return response
-
-
-auth_templates_routes = APIRouter(
-    tags=['templates'],
-)
-
-@auth_templates_routes.get(
-    path="/login",
-    name='login_template',
-    summary="Отрисовывает страницу login",
-    response_class=HTMLResponse
-)
-async def login_template(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name='auth/login.html'
-    )
-
-@auth_templates_routes.get(
-    path="/register",
-    name='register_template',
-    summary="Отрисовывает страницу register",
-    response_class=HTMLResponse
-)
-async def login_template(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name='auth/register.html'
-    )
