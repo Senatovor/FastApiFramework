@@ -88,8 +88,8 @@ def create_app() -> FastAPI:
         allow_headers=["*"]
     )
     app.add_middleware(AdminPermissionMiddleware)
-    app.mount('/static', StaticFiles(directory=Path(__file__).parent.parent / 'static'), name='static')
     app.add_exception_handler(HTTPException, unauthorised_exception_handler)
+    app.mount('/static', StaticFiles(directory=Path(__file__).parent.parent / 'static'), name='static')
     app.include_router(auth_router)  # Установка роутера авторизации
     app.include_router(auth_templates_routes)
     app.include_router(admin_router)
